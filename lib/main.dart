@@ -134,10 +134,13 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddTask,
-        tooltip: 'Add Task',
-        child: Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 100.0), // Adjust bottom padding as needed
+        child: FloatingActionButton(
+          onPressed: _navigateToAddTask,
+          tooltip: 'Add Task',
+          child: Icon(Icons.add),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -181,13 +184,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () => _removeTask(task.id!),
+                      onPressed: () => _showDeleteDialog(context, task),
                     ),
                     onTap: () => _navigateToEditDeleteTask(task),
                   );
                 },
               ),
             ),
+            SizedBox(height: 16.0), // Add some space between lists
             ExpansionTile(
               title: Text(
                 'Completed',
@@ -197,34 +201,36 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               children: [
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: _completedTasks.length,
-                  itemBuilder: (context, index) {
-                    final task = _completedTasks[index];
-                    return ListTile(
-                      leading: Checkbox(
-                        value: task.completed == 1,
-                        onChanged: (bool? value) {
-                          _toggleCompletion(task);
-                        },
-                      ),
-                      title: Text(
-                        task.name,
-                        style: TextStyle(
-                          decoration: task.completed == 1
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
+                Container(
+                  height: 200.0, // Adjust the height as needed
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _completedTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = _completedTasks[index];
+                      return ListTile(
+                        leading: Checkbox(
+                          value: task.completed == 1,
+                          onChanged: (bool? value) {
+                            _toggleCompletion(task);
+                          },
                         ),
-                      ),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
-                        onPressed: () => _removeTask(task.id!),
-                      ),
-                      onTap: () => _navigateToEditDeleteTask(task),
-                    );
-                  },
+                        title: Text(
+                          task.name,
+                          style: TextStyle(
+                            decoration: task.completed == 1
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                          ),
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
+                          onPressed: () => _showDeleteDialog(context, task),
+                        ),
+                        onTap: () => _navigateToEditDeleteTask(task),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -233,8 +239,32 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-
-
-
+  void _showDeleteDialog(BuildContext context, Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete '${task.name}'?"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text("Delete"),
+              onPressed: () {
+                _removeTask(task.id!);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
+
+
