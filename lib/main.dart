@@ -71,17 +71,32 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _addTask(String name) async {
+  void _addTask(String name, DateTime? dueDate, TimeOfDay? reminderTime) async {
+    print('entered main.dart with');
+    print(name);
+    print(dueDate);
+    print(reminderTime);
     if (name.isNotEmpty) {
-      await widget.dbHelper.insertTask(Task(name: name, completed: 0));
+      await widget.dbHelper.insertTask(Task(
+        name: name,
+        completed: 0,
+        dueDate: dueDate,
+        reminderTime: reminderTime,
+      ));
       _taskController.clear();
       _refreshTasks();
+      print('Added');
     }
   }
 
   void _toggleCompletion(Task task) async {
     await widget.dbHelper.updateTask(Task(
-        id: task.id, name: task.name, completed: task.completed == 1 ? 0 : 1));
+      id: task.id,
+      name: task.name,
+      completed: task.completed == 1 ? 0 : 1,
+      dueDate: task.dueDate,
+      reminderTime: task.reminderTime,
+    ));
     _refreshTasks();
   }
 
@@ -95,8 +110,14 @@ class _MyHomePageState extends State<MyHomePage> {
       context,
       MaterialPageRoute(builder: (context) => AddTaskPage()),
     );
-    if (result != null && result is String) {
-      _addTask(result);
+    print(result);
+    if (result != null && result is Map<String, dynamic>) {
+      print('here');
+      String taskName = result['taskName'];
+      DateTime? dueDate = result['dueDate'];
+      TimeOfDay? reminderTime = result['reminderTime'];
+
+      _addTask(taskName, dueDate, reminderTime);
     }
   }
 
@@ -148,9 +169,13 @@ class _MyHomePageState extends State<MyHomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Center(
-              child: Image.asset('assets/logo.png'),
+              child: SizedBox(
+                width: 400, // Adjust the width as needed
+                height: 200, // Adjust the height as needed
+                child: Image.asset('assets/logo.png'),
+              ),
             ),
-            SizedBox(height: 80.0),
+            SizedBox(height: 30.0),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -158,6 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ),
@@ -182,6 +208,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             : TextDecoration.none,
                       ),
                     ),
+                    subtitle: task.dueDate != null
+                        ? Text(
+                      'Due: ${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}',
+                      style: TextStyle(color: Colors.grey),
+                    )
+                        : null,
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
                       onPressed: () => _showDeleteDialog(context, task),
@@ -198,6 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               children: [
@@ -223,11 +256,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                 : TextDecoration.none,
                           ),
                         ),
+                        subtitle: task.dueDate != null
+                            ? Text(
+                          'Due: ${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}',
+                          style: TextStyle(color: Colors.grey),
+                        )
+                            : null,
                         trailing: IconButton(
                           icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
                           onPressed: () => _showDeleteDialog(context, task),
                         ),
-                        onTap: () => _navigateToEditDeleteTask(task),
                       );
                     },
                   ),
@@ -239,6 +277,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
   void _showDeleteDialog(BuildContext context, Task task) {
     showDialog(
       context: context,
@@ -266,5 +305,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-

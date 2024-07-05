@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   late Database _database;
@@ -10,14 +11,14 @@ class DatabaseHelper {
   Future<void> initializeDatabase() async {
     WidgetsFlutterBinding.ensureInitialized();
     final databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, 'task_database.db');
+    String path = join(databasesPath, 'task.db');
 
     _database = await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: (Database db, int version) async {
         await db.execute(
-          'CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, completed INTEGER)',
+          'CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, completed INTEGER, due_date INTEGER, reminder_time INTEGER)',
         );
       },
     );
@@ -32,16 +33,9 @@ class DatabaseHelper {
   }
 
   Future<List<Task>> tasks() async {
-    final List<Map<String, Object?>> taskMaps = await _database.query('tasks');
+    final List<Map<String, dynamic>> taskMaps = await _database.query('tasks');
 
-    return [
-      for (final {
-      'id': id as int,
-      'name': name as String,
-      'completed': completed as int,
-      } in taskMaps)
-        Task(id: id, name: name, completed: completed),
-    ];
+    return taskMaps.map((map) => Task.fromMap(map)).toList();
   }
 
   Future<void> updateTask(Task task) async {
@@ -62,15 +56,21 @@ class DatabaseHelper {
   }
 }
 
+
+
 class Task {
   final int? id;
   final String name;
   final int completed;
+  final DateTime? dueDate;
+  final TimeOfDay? reminderTime;
 
   Task({
     this.id,
     required this.name,
     required this.completed,
+    this.dueDate,
+    this.reminderTime,
   });
 
   Map<String, Object?> toMap() {
@@ -78,11 +78,25 @@ class Task {
       'id': id,
       'name': name,
       'completed': completed,
+      'due_date': dueDate != null ? dueDate!.millisecondsSinceEpoch : null,
+      'reminder_time': reminderTime != null
+          ? reminderTime!.hour * 60 + reminderTime!.minute
+          : null,
     };
   }
 
-  @override
-  String toString() {
-    return 'Task{id: $id, name: $name, completed: $completed}';
+  factory Task.fromMap(Map<String, dynamic> map) {
+    return Task(
+      id: map['id'] as int?,
+      name: map['name'] as String,
+      completed: map['completed'] as int,
+      dueDate: map['due_date'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['due_date'] as int)
+          : null,
+      reminderTime: map['reminder_time'] != null
+          ? TimeOfDay(hour: map['reminder_time']! ~/ 60, minute: map['reminder_time']! % 60)
+          : null,
+    );
   }
 }
+
