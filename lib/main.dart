@@ -21,10 +21,24 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'To-Do App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        brightness: Brightness.light, // Set brightness to light for white background and black text
+        scaffoldBackgroundColor: Colors.white, // Set scaffold background color to white
+        textTheme: TextTheme(
+          bodyText1: TextStyle(color: Colors.black), // Set text color to black
+          bodyText2: TextStyle(color: Colors.black), // Set text color to black
+        ),
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: Colors.pink, // Example primary color swatch
+          backgroundColor: Colors.white, // Set background color to white
+          brightness: Brightness.light, // Set brightness to light
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white, // Set app bar background color to white
+          foregroundColor: Colors.black, // Set app bar text color to black
+        ),
         useMaterial3: true,
       ),
-      home: MyHomePage(title: 'To-Do List', dbHelper: dbHelper),
+      home: MyHomePage(title: '', dbHelper: dbHelper),
     );
   }
 }
@@ -103,10 +117,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    List<Task> _completedTasks = _tasks.where((task) => task.completed == 1).toList();
+    List<Task> _incompleteTasks = _tasks.where((task) => task.completed == 0).toList();
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        title: Text(widget.title),
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: true,
+        iconTheme: IconThemeData(
+          color: Colors.pink, // Set the back arrow color to pink
+        ),
+        title: Text(
+          widget.title,
+          style: TextStyle(
+            color: Colors.black,
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAddTask,
@@ -116,13 +142,35 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            Center(
+              child: Image.asset('assets/logo.png'),
+            ),
+            SizedBox(height: 80.0),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'To Do',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            SizedBox(height: 16.0),
             Expanded(
               child: ListView.builder(
-                itemCount: _tasks.length,
+                itemCount: _incompleteTasks.length,
                 itemBuilder: (context, index) {
-                  final task = _tasks[index];
+                  final task = _incompleteTasks[index];
                   return ListTile(
+                    leading: Checkbox(
+                      value: task.completed == 1,
+                      onChanged: (bool? value) {
+                        _toggleCompletion(task);
+                      },
+                    ),
                     title: Text(
                       task.name,
                       style: TextStyle(
@@ -131,20 +179,62 @@ class _MyHomePageState extends State<MyHomePage> {
                             : TextDecoration.none,
                       ),
                     ),
-                    leading: Checkbox(
-                      value: task.completed == 1,
-                      onChanged: (bool? value) {
-                        _toggleCompletion(task);
-                      },
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
+                      onPressed: () => _removeTask(task.id!),
                     ),
                     onTap: () => _navigateToEditDeleteTask(task),
                   );
                 },
               ),
             ),
+            ExpansionTile(
+              title: Text(
+                'Completed',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: _completedTasks.length,
+                  itemBuilder: (context, index) {
+                    final task = _completedTasks[index];
+                    return ListTile(
+                      leading: Checkbox(
+                        value: task.completed == 1,
+                        onChanged: (bool? value) {
+                          _toggleCompletion(task);
+                        },
+                      ),
+                      title: Text(
+                        task.name,
+                        style: TextStyle(
+                          decoration: task.completed == 1
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
+                        onPressed: () => _removeTask(task.id!),
+                      ),
+                      onTap: () => _navigateToEditDeleteTask(task),
+                    );
+                  },
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+
+
+
+
 }
