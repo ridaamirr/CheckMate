@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
 class AddTaskPage extends StatefulWidget {
   @override
   _AddTaskPageState createState() => _AddTaskPageState();
@@ -73,7 +73,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   Text(
                     _dueDate == null
                         ? 'Select Due Date'
-                        : 'Due Date: ${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}',
+                        : 'Due Date: ${DateFormat('E, d MMMM, yyyy').format(_dueDate!)}',
                   ),
                 ],
               ),
@@ -87,7 +87,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   Text(
                     _reminderTime == null
                         ? 'Select Reminder Time'
-                        : 'Reminder Time: ${_reminderTime!.hour}:${_reminderTime!.minute}',
+                        : 'Reminder Time: ${DateFormat('h:mm a').format(DateTime(2024, 1, 1, _reminderTime!.hour, _reminderTime!.minute))}',
                   ),
                 ],
               ),

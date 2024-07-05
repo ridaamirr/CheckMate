@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
+import 'database.dart';
+import 'package:intl/intl.dart';
 
-class EditDeleteTaskPage extends StatefulWidget {
+class EditTaskPage extends StatefulWidget {
   final Task task;
   final DatabaseHelper dbHelper;
 
-  EditDeleteTaskPage({required this.task, required this.dbHelper});
+  EditTaskPage({required this.task, required this.dbHelper});
 
   @override
-  _EditDeleteTaskPageState createState() => _EditDeleteTaskPageState();
+  _EditTaskPageState createState() => _EditTaskPageState();
 }
 
-class _EditDeleteTaskPageState extends State<EditDeleteTaskPage> {
+class _EditTaskPageState extends State<EditTaskPage> {
   final TextEditingController _taskNameController = TextEditingController();
   DateTime? _dueDate;
   TimeOfDay? _reminderTime;
@@ -87,7 +88,7 @@ class _EditDeleteTaskPageState extends State<EditDeleteTaskPage> {
                   Text(
                     _dueDate == null
                         ? 'Select Due Date'
-                        : 'Due Date: ${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}',
+                        : 'Due Date: ${DateFormat('E, d MMMM, yyyy').format(_dueDate!)}',
                   ),
                 ],
               ),
@@ -101,7 +102,7 @@ class _EditDeleteTaskPageState extends State<EditDeleteTaskPage> {
                   Text(
                     _reminderTime == null
                         ? 'Select Reminder Time'
-                        : 'Reminder Time: ${_reminderTime!.hour}:${_reminderTime!.minute}',
+                        : 'Reminder Time: ${DateFormat('h:mm a').format(DateTime(2024, 1, 1, _reminderTime!.hour, _reminderTime!.minute))}',
                   ),
                 ],
               ),

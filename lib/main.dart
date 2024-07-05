@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
-import 'addtask.dart'; // Import add task page
-import 'edit_delete_task.dart'; // Import edit/delete task page
+import 'database.dart';
+import 'addtask.dart';
+import 'edittask.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,20 +22,20 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'To-Do App',
       theme: ThemeData(
-        brightness: Brightness.light, // Set brightness to light for white background and black text
-        scaffoldBackgroundColor: Colors.white, // Set scaffold background color to white
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.white,
         textTheme: TextTheme(
-          bodyText1: TextStyle(color: Colors.black), // Set text color to black
-          bodyText2: TextStyle(color: Colors.black), // Set text color to black
+          bodyText1: TextStyle(color: Colors.black),
+          bodyText2: TextStyle(color: Colors.black),
         ),
         colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.pink, // Example primary color swatch
-          backgroundColor: Colors.white, // Set background color to white
-          brightness: Brightness.light, // Set brightness to light
+          primarySwatch: Colors.pink,
+          backgroundColor: Colors.white,
+          brightness: Brightness.light,
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white, // Set app bar background color to white
-          foregroundColor: Colors.black, // Set app bar text color to black
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
         ),
         useMaterial3: true,
       ),
@@ -72,10 +73,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _addTask(String name, DateTime? dueDate, TimeOfDay? reminderTime) async {
-    print('entered main.dart with');
-    print(name);
-    print(dueDate);
-    print(reminderTime);
     if (name.isNotEmpty) {
       await widget.dbHelper.insertTask(Task(
         name: name,
@@ -85,7 +82,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ));
       _taskController.clear();
       _refreshTasks();
-      print('Added');
     }
   }
 
@@ -125,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditDeleteTaskPage(
+        builder: (context) => EditTaskPage(
           task: task,
           dbHelper: widget.dbHelper,
         ),
@@ -210,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     subtitle: task.dueDate != null
                         ? Text(
-                      'Due: ${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}',
+                      'Due: ${DateFormat('E, d MMMM, yyyy').format(task.dueDate!)}',
                       style: TextStyle(color: Colors.grey),
                     )
                         : null,
