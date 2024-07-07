@@ -24,7 +24,7 @@ Create an app that allows users to manage their daily tasks.
 - Flutter SDK: [Installation Guide](https://flutter.dev/docs/get-started/install)
 - Dart SDK: Included with Flutter SDK
 - SQLite: Included with Flutter plugins
-- Awesome Notifications:Included with Flutter plugins 
+- Awesome Notifications: Included with Flutter plugins 
 
 ### Installation
 1. **Clone the repository:**
@@ -43,9 +43,5 @@ Create an app that allows users to manage their daily tasks.
     ```bash
     flutter run
     ```
-## Contributing
-- Contributions are welcome! Please create a pull request with your changes.
 
-## License
-- This project is licensed under the MIT License. See the `LICENSE` file for details.
 
