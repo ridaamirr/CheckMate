@@ -4,7 +4,7 @@
 Create an app that allows users to manage their daily tasks.
 
 ## Features
-- **Task Creation**: Easily create new tasks with a title, description, due date, and category.
+- **Task Creation**: Easily create new tasks with a title, description, due date, and reminder time.
 - **Task Viewing**: View all tasks in a categorized list.
 - **Task Editing**: Edit existing tasks.
 - **Task Deletion**: Delete tasks that are no longer needed.
