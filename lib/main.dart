@@ -1,30 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'database_helper.dart';
 import 'addtask.dart';
 import 'edittask.dart';
 import 'package:intl/intl.dart';
-
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-FlutterLocalNotificationsPlugin();
+import 'package:todolist/services/notification_service.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize database and time zones
   final dbHelper = DatabaseHelper();
   await dbHelper.initializeDatabase();
-  tz.initializeTimeZones();
-
-  // Initialize local notifications plugin
-  const AndroidInitializationSettings initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initializationSettings =
-  InitializationSettings(android: initializationSettingsAndroid);
-
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   runApp(MyApp(dbHelper: dbHelper));
 }
@@ -91,16 +77,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  final AndroidNotificationDetails androidPlatformChannelSpecifics =
-  AndroidNotificationDetails(
-    'reminder_channel', // Unique ID for this channel
-    'Reminder Notifications', // Channel name visible to users
-    importance: Importance.max,
-    priority: Priority.high,
-  );
-
-
-
   void _addTask(String name, DateTime? dueDate, TimeOfDay? reminderTime, String description) async {
     print('in add task function');
     if (name.isNotEmpty) {
@@ -124,40 +100,25 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _scheduleNotification(Task task, int insertedId) async {
-    if (task.reminderTime == null || task.dueDate == null || insertedId == null) {
-      return; // Handle the case where reminderTime, dueDate, or id is null
-    }
+    if (task.dueDate != null && task.reminderTime != null) {
+      DateTime dueDate = task.dueDate!;
+      TimeOfDay reminderTime = task.reminderTime!;
 
-    try {
-      final scheduledDate = tz.TZDateTime(
-        tz.local,
-        task.dueDate!.year,
-        task.dueDate!.month,
-        task.dueDate!.day,
-        task.reminderTime!.hour,
-        task.reminderTime!.minute,
+      DateTime scheduledDateTime = DateTime(
+        dueDate.year,
+        dueDate.month,
+        dueDate.day,
+        reminderTime.hour,
+        reminderTime.minute,
       );
 
-      print('Scheduling notification for task ${task.name}, $insertedId at $scheduledDate');
-
-
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        insertedId,
-        'Task Reminder',
-        task.name,
-        scheduledDate,
-        NotificationDetails(android: androidPlatformChannelSpecifics),
-        androidAllowWhileIdle: true,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+      await NotificationService.showNotification(
+        title: "Reminder",
+        body: "It's time for ${task.name}",
+        scheduledDateTime: scheduledDateTime,
       );
-    } catch (e) {
-      print('Error scheduling notification: $e');
     }
   }
-
-
 
 
   void _toggleCompletion(Task task) async {

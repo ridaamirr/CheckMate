@@ -1,8 +1,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
     <application
         android:label="To Do"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -29,16 +43,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-        <!-- Add the receivers for flutter_local_notifications -->
-        <receiver android:name="com.dexterous.flutterlocalnotifications.NotificationBroadcastReceiver">
-            <intent-filter>
-                <action android:name="com.dexterous.flutterlocalnotifications.intent.NotificationBroadcastReceiver" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="com.dexterous.flutterlocalnotifications.NotificationPublisher" />
-        <receiver android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
-        <receiver android:name="com.dexterous.flutterlocalnotifications.DismissedReceiver" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility?hl=en and
@@ -51,8 +55,5 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
-
-    <!-- Add permission for receiving boot completed action -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-
 </manifest>
+
