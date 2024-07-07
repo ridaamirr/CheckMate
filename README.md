@@ -1,4 +1,4 @@
-# To-Do List App
+![ToDo Logo](/todo/assets/images/logo.png)
 
 ## Objective
 Create an app that allows users to manage their daily tasks.
