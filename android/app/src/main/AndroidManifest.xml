@@ -16,9 +16,9 @@
                  while the Flutter UI initializes. After that, this theme continues
                  to determine the Window background behind the Flutter UI. -->
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+                />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -29,6 +29,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Add the receivers for flutter_local_notifications -->
+        <receiver android:name="com.dexterous.flutterlocalnotifications.NotificationBroadcastReceiver">
+            <intent-filter>
+                <action android:name="com.dexterous.flutterlocalnotifications.intent.NotificationBroadcastReceiver" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.dexterous.flutterlocalnotifications.NotificationPublisher" />
+        <receiver android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
+        <receiver android:name="com.dexterous.flutterlocalnotifications.DismissedReceiver" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility?hl=en and
@@ -41,5 +51,8 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
-</manifest>
 
+    <!-- Add permission for receiving boot completed action -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+</manifest>

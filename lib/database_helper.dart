@@ -15,22 +15,24 @@ class DatabaseHelper {
 
     _database = await openDatabase(
       path,
-      version: 3,
+      version: 6,
       onCreate: (Database db, int version) async {
         await db.execute(
-          'CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, completed INTEGER, due_date INTEGER, reminder_time INTEGER)',
+          'CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, completed INTEGER, due_date INTEGER, reminder_time TEXT)',
         );
       },
     );
   }
 
-  Future<void> insertTask(Task task) async {
-    await _database.insert(
+  Future<int> insertTask(Task task) async {
+    final id = await _database.insert(
       'tasks',
       task.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    return id;
   }
+
 
   Future<List<Task>> tasks() async {
     final List<Map<String, dynamic>> taskMaps = await _database.query('tasks');
@@ -56,14 +58,13 @@ class DatabaseHelper {
   }
 }
 
-
-
 class Task {
   final int? id;
   final String name;
   final int completed;
   final DateTime? dueDate;
   final TimeOfDay? reminderTime;
+  final String description;
 
   Task({
     this.id,
@@ -71,17 +72,19 @@ class Task {
     required this.completed,
     this.dueDate,
     this.reminderTime,
+    required this.description,
   });
 
-  Map<String, Object?> toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
       'completed': completed,
-      'due_date': dueDate != null ? dueDate!.millisecondsSinceEpoch : null,
+      'due_date': dueDate?.millisecondsSinceEpoch,
       'reminder_time': reminderTime != null
-          ? reminderTime!.hour * 60 + reminderTime!.minute
+          ? '${reminderTime!.hour}:${reminderTime!.minute}'
           : null,
+      'description': description,
     };
   }
 
@@ -94,9 +97,21 @@ class Task {
           ? DateTime.fromMillisecondsSinceEpoch(map['due_date'] as int)
           : null,
       reminderTime: map['reminder_time'] != null
-          ? TimeOfDay(hour: map['reminder_time']! ~/ 60, minute: map['reminder_time']! % 60)
+          ? parseTimeOfDay(map['reminder_time'].toString())
           : null,
+      description: map['description'] as String,
     );
   }
+
 }
 
+TimeOfDay parseTimeOfDay(String? timeString) {
+  if (timeString == null || !timeString.contains(':')) {
+    return TimeOfDay(hour: 0, minute: 0); // Default to midnight if format is invalid or timeString is null
+  }
+  final parts = timeString.split(':');
+  if (parts.length != 2) {
+    return TimeOfDay(hour: 0, minute: 0); // Handle unexpected format gracefully
+  }
+  return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+}

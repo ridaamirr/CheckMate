@@ -7,6 +7,7 @@ class AddTaskPage extends StatefulWidget {
 
 class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController(); // New controller for description
   DateTime? _dueDate;
   TimeOfDay? _reminderTime;
   final _formKey = GlobalKey<FormState>();
@@ -91,6 +92,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   ),
                 ],
               ),
+              SizedBox(height: 10),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Enter Description', // Description field
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
               SizedBox(height: 20),
               Container(
                 height: 60,
@@ -103,14 +113,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     ),
                   ),
                   onPressed: () {
+                    print('leaving add task');
                     if (_formKey.currentState!.validate()) {
                       String taskName = _taskController.text.trim();
+                      String description = _descriptionController.text.trim(); // Get description value
                       Navigator.pop(
                         context,
                         {
                           'taskName': taskName,
                           'dueDate': _dueDate,
                           'reminderTime': _reminderTime,
+                          'description': description, // Pass description back to previous screen
                         },
                       );
                     }
@@ -128,3 +141,4 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 }
+

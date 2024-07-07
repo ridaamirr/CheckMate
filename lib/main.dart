@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'database_helper.dart';
 import 'addtask.dart';
 import 'edittask.dart';
 import 'package:intl/intl.dart';
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize database and time zones
   final dbHelper = DatabaseHelper();
   await dbHelper.initializeDatabase();
+  tz.initializeTimeZones();
+
+  // Initialize local notifications plugin
+  const AndroidInitializationSettings initializationSettingsAndroid =
+  AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings =
+  InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   runApp(MyApp(dbHelper: dbHelper));
 }
+
 
 class MyApp extends StatelessWidget {
   final DatabaseHelper dbHelper;
@@ -44,6 +62,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class MyHomePage extends StatefulWidget {
   final String title;
   final DatabaseHelper dbHelper;
@@ -72,18 +91,74 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _addTask(String name, DateTime? dueDate, TimeOfDay? reminderTime) async {
+  final AndroidNotificationDetails androidPlatformChannelSpecifics =
+  AndroidNotificationDetails(
+    'reminder_channel', // Unique ID for this channel
+    'Reminder Notifications', // Channel name visible to users
+    importance: Importance.max,
+    priority: Priority.high,
+  );
+
+
+
+  void _addTask(String name, DateTime? dueDate, TimeOfDay? reminderTime, String description) async {
+    print('in add task function');
     if (name.isNotEmpty) {
-      await widget.dbHelper.insertTask(Task(
+      final task = Task(
         name: name,
         completed: 0,
         dueDate: dueDate,
         reminderTime: reminderTime,
-      ));
+        description: description,
+      );
+      print('adding task');
+      final insertedId = await widget.dbHelper.insertTask(task);
+
+      if (reminderTime != null || task.dueDate != null ) {
+        _scheduleNotification(task, insertedId);
+      }
+
       _taskController.clear();
       _refreshTasks();
     }
   }
+
+  void _scheduleNotification(Task task, int insertedId) async {
+    if (task.reminderTime == null || task.dueDate == null || insertedId == null) {
+      return; // Handle the case where reminderTime, dueDate, or id is null
+    }
+
+    try {
+      final scheduledDate = tz.TZDateTime(
+        tz.local,
+        task.dueDate!.year,
+        task.dueDate!.month,
+        task.dueDate!.day,
+        task.reminderTime!.hour,
+        task.reminderTime!.minute,
+      );
+
+      print('Scheduling notification for task ${task.name}, $insertedId at $scheduledDate');
+
+
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        insertedId,
+        'Task Reminder',
+        task.name,
+        scheduledDate,
+        NotificationDetails(android: androidPlatformChannelSpecifics),
+        androidAllowWhileIdle: true,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      print('Error scheduling notification: $e');
+    }
+  }
+
+
+
 
   void _toggleCompletion(Task task) async {
     await widget.dbHelper.updateTask(Task(
@@ -92,6 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
       completed: task.completed == 1 ? 0 : 1,
       dueDate: task.dueDate,
       reminderTime: task.reminderTime,
+      description: task.description,
     ));
     _refreshTasks();
   }
@@ -108,12 +184,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     print(result);
     if (result != null && result is Map<String, dynamic>) {
-      print('here');
       String taskName = result['taskName'];
       DateTime? dueDate = result['dueDate'];
       TimeOfDay? reminderTime = result['reminderTime'];
-
-      _addTask(taskName, dueDate, reminderTime);
+      String description = result['description'];
+      _addTask(taskName, dueDate, reminderTime, description);
     }
   }
 
@@ -189,6 +264,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemCount: _incompleteTasks.length,
                 itemBuilder: (context, index) {
                   final task = _incompleteTasks[index];
+                  final isOverdue = task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
                   return ListTile(
                     leading: Checkbox(
                       value: task.completed == 1,
@@ -207,7 +283,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     subtitle: task.dueDate != null
                         ? Text(
                       'Due: ${DateFormat('E, d MMMM, yyyy').format(task.dueDate!)}',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: isOverdue ? Colors.red : Colors.grey,
+                      ),
                     )
                         : null,
                     trailing: IconButton(
@@ -237,6 +315,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     itemCount: _completedTasks.length,
                     itemBuilder: (context, index) {
                       final task = _completedTasks[index];
+                      final isOverdue = task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
                       return ListTile(
                         leading: Checkbox(
                           value: task.completed == 1,
@@ -255,7 +334,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         subtitle: task.dueDate != null
                             ? Text(
                           'Due: ${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: isOverdue ? Colors.red : Colors.grey,
+                          ),
                         )
                             : null,
                         trailing: IconButton(

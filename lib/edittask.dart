@@ -14,6 +14,7 @@ class EditTaskPage extends StatefulWidget {
 
 class _EditTaskPageState extends State<EditTaskPage> {
   final TextEditingController _taskNameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController(); // New controller for description
   DateTime? _dueDate;
   TimeOfDay? _reminderTime;
   final _formKey = GlobalKey<FormState>();
@@ -22,6 +23,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
   void initState() {
     super.initState();
     _taskNameController.text = widget.task.name;
+    _descriptionController.text = widget.task.description ?? ''; // Initialize description controller
     _dueDate = widget.task.dueDate;
     _reminderTime = widget.task.reminderTime;
   }
@@ -106,6 +108,15 @@ class _EditTaskPageState extends State<EditTaskPage> {
                   ),
                 ],
               ),
+              SizedBox(height: 10),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Enter Description', // Description field
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
               SizedBox(height: 20),
               Container(
                 height: 60,
@@ -122,6 +133,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
                       widget.dbHelper.updateTask(Task(
                         id: widget.task.id,
                         name: _taskNameController.text,
+                        description: _descriptionController.text, // Update description value
                         completed: widget.task.completed,
                         dueDate: _dueDate,
                         reminderTime: _reminderTime,
@@ -142,3 +154,4 @@ class _EditTaskPageState extends State<EditTaskPage> {
     );
   }
 }
+
