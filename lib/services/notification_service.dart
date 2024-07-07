@@ -1,6 +1,6 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static Future<void> initializeNotification() async {
@@ -8,7 +8,7 @@ class NotificationService {
       null,
       [
         NotificationChannel(
-          channelGroupKey: 'high_importance_channel',
+          channelGroupKey: 'high_importance_channel_group',
           channelKey: 'high_importance_channel',
           channelName: 'Basic notifications',
           channelDescription: 'Notification channel for basic tests',
@@ -30,13 +30,14 @@ class NotificationService {
       debug: true,
     );
 
-    await AwesomeNotifications().isNotificationAllowed().then(
-      (isAllowed) async {
-        if (!isAllowed) {
-          await AwesomeNotifications().requestPermissionToSendNotifications();
-        }
-      },
-    );
+    if (!await AwesomeNotifications().isNotificationAllowed()) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
+
+    var status = await Permission.notification.status;
+    if (!status.isGranted) {
+      status = await Permission.notification.request();
+    }
 
     await AwesomeNotifications().setListeners(
       onActionReceivedMethod: onNotificationCreatedMethod,
@@ -46,37 +47,20 @@ class NotificationService {
     );
   }
 
-  /// Use this method to detect when a new notification or a schedule is created
   static Future<void> onNotificationCreatedMethod(
       ReceivedNotification receivedNotification) async {
     debugPrint('onNotificationCreatedMethod');
   }
 
-  /// Use this method to detect every time that a new notification is displayed
   static Future<void> onNotificationDisplayedMethod(
       ReceivedNotification receivedNotification) async {
     debugPrint('onNotificationDisplayedMethod');
   }
 
-  /// Use this method to detect if the user dismissed a notification
   static Future<void> onDismissActionReceivedMethod(
       ReceivedAction receivedAction) async {
     debugPrint('onDismissActionReceivedMethod');
   }
-
-  /// Use this method to detect when the user taps on a notification or action button
- /*static Future<void> onActionReceivedMethod(
-     ReceivedAction receivedAction) async {
-    debugPrint('onActionReceivedMethod');
-    final payload = receivedAction.payload ?? {};
-    if (payload["navigate"] == "true") {
-      MainApp.navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (_) => const SecondScreen(),
-        ),
-      );
-    }
-  }*/
 
   static Future<void> showNotification({
     required final String title,
@@ -92,8 +76,6 @@ class NotificationService {
     final int? interval,
     DateTime? scheduledDateTime,
   }) async {
-    assert(!scheduled || (scheduled && interval != null));
-
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: -1,
@@ -106,6 +88,7 @@ class NotificationService {
         category: category,
         payload: payload,
         bigPicture: bigPicture,
+        largeIcon: 'resource://mipmap/ic_launcher', // Update this path if necessary
       ),
       actionButtons: actionButtons,
       schedule: scheduledDateTime != null
