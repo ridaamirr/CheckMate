@@ -1,4 +1,4 @@
-![ToDo Logo](/todo/assets/images/logo.png)
+![ToDo Logo](/assets/logo.png)
 
 ## Objective
 Create an app that allows users to manage their daily tasks.
