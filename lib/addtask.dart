@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 class AddTaskPage extends StatefulWidget {
   @override
   _AddTaskPageState createState() => _AddTaskPageState();
@@ -11,6 +12,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   DateTime? _dueDate;
   TimeOfDay? _reminderTime;
   final _formKey = GlobalKey<FormState>();
+
+  String _priority = 'Low'; // Default priority
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -65,6 +68,26 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 },
               ),
               SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _priority,
+                decoration: InputDecoration(
+                  labelText: 'Priority',
+                  border: OutlineInputBorder(),
+                ),
+                items: ['Low', 'Medium', 'High']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _priority = newValue!;
+                  });
+                },
+              ),
+              SizedBox(height: 20),
               Row(
                 children: [
                   IconButton(
@@ -101,7 +124,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
                 maxLines: 3,
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               Container(
                 height: 60,
                 width: double.infinity,
@@ -113,7 +136,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     ),
                   ),
                   onPressed: () {
-                    print('leaving add task');
                     if (_formKey.currentState!.validate()) {
                       String taskName = _taskController.text.trim();
                       String description = _descriptionController.text.trim(); // Get description value
@@ -123,7 +145,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           'taskName': taskName,
                           'dueDate': _dueDate,
                           'reminderTime': _reminderTime,
-                          'description': description, // Pass description back to previous screen
+                          'description': description,
+                          'priority': _priority,
                         },
                       );
                     }
@@ -141,4 +164,3 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 }
-

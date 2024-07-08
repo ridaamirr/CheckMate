@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:async';
-
 import 'package:flutter/widgets.dart';
 
 class DatabaseHelper {
@@ -15,12 +14,13 @@ class DatabaseHelper {
 
     _database = await openDatabase(
       path,
-      version: 6,
+      version: 8,
       onCreate: (Database db, int version) async {
         await db.execute(
-          'CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, completed INTEGER, due_date INTEGER, reminder_time TEXT)',
+          'CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, completed INTEGER, due_date INTEGER, reminder_time TEXT, priority TEXT)',
         );
       },
+
     );
   }
 
@@ -32,7 +32,6 @@ class DatabaseHelper {
     );
     return id;
   }
-
 
   Future<List<Task>> tasks() async {
     final List<Map<String, dynamic>> taskMaps = await _database.query('tasks');
@@ -65,6 +64,7 @@ class Task {
   final DateTime? dueDate;
   final TimeOfDay? reminderTime;
   final String description;
+  final String priority;
 
   Task({
     this.id,
@@ -73,6 +73,7 @@ class Task {
     this.dueDate,
     this.reminderTime,
     required this.description,
+    required this.priority,
   });
 
   Map<String, dynamic> toMap() {
@@ -85,6 +86,7 @@ class Task {
           ? '${reminderTime!.hour}:${reminderTime!.minute}'
           : null,
       'description': description,
+      'priority': priority,
     };
   }
 
@@ -100,9 +102,9 @@ class Task {
           ? parseTimeOfDay(map['reminder_time'].toString())
           : null,
       description: map['description'] as String,
+      priority: map['priority'] as String? ?? 'Low', // Parse priority from the map
     );
   }
-
 }
 
 TimeOfDay parseTimeOfDay(String? timeString) {

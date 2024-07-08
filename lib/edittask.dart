@@ -17,6 +17,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
   final TextEditingController _descriptionController = TextEditingController(); // New controller for description
   DateTime? _dueDate;
   TimeOfDay? _reminderTime;
+  String _priority = 'Low'; // Default priority
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -26,6 +27,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
     _descriptionController.text = widget.task.description ?? ''; // Initialize description controller
     _dueDate = widget.task.dueDate;
     _reminderTime = widget.task.reminderTime;
+    _priority = widget.task.priority; // Initialize priority
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -81,6 +83,25 @@ class _EditTaskPageState extends State<EditTaskPage> {
                 },
               ),
               SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _priority,
+                decoration: InputDecoration(
+                  labelText: 'Priority',
+                  border: OutlineInputBorder(),
+                ),
+                items: ['Low', 'Medium', 'High'].map((String priority) {
+                  return DropdownMenuItem<String>(
+                    value: priority,
+                    child: Text(priority),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _priority = newValue!;
+                  });
+                },
+              ),
+              SizedBox(height: 20),
               Row(
                 children: [
                   IconButton(
@@ -112,12 +133,13 @@ class _EditTaskPageState extends State<EditTaskPage> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
-                  labelText: 'Enter Description', // Description field
+                  labelText: 'Enter Description',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
               ),
-              SizedBox(height: 20),
+
+              SizedBox(height: 10),
               Container(
                 height: 60,
                 width: double.infinity,
@@ -133,10 +155,11 @@ class _EditTaskPageState extends State<EditTaskPage> {
                       widget.dbHelper.updateTask(Task(
                         id: widget.task.id,
                         name: _taskNameController.text,
-                        description: _descriptionController.text, // Update description value
+                        description: _descriptionController.text,
                         completed: widget.task.completed,
                         dueDate: _dueDate,
                         reminderTime: _reminderTime,
+                        priority: _priority,
                       ));
                       Navigator.pop(context, true);
                     }
@@ -154,4 +177,3 @@ class _EditTaskPageState extends State<EditTaskPage> {
     );
   }
 }
-

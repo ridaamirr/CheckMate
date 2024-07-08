@@ -15,7 +15,6 @@ void main() async {
   runApp(MyApp(dbHelper: dbHelper));
 }
 
-
 class MyApp extends StatelessWidget {
   final DatabaseHelper dbHelper;
 
@@ -48,7 +47,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class MyHomePage extends StatefulWidget {
   final String title;
   final DatabaseHelper dbHelper;
@@ -63,6 +61,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _taskController = TextEditingController();
   List<Task> _tasks = [];
+  String _selectedPriority = 'All';
 
   @override
   void initState() {
@@ -77,8 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _addTask(String name, DateTime? dueDate, TimeOfDay? reminderTime, String description) async {
-    print('in add task function');
+  void _addTask(String name, DateTime? dueDate, TimeOfDay? reminderTime, String description, String priority) async {
     if (name.isNotEmpty) {
       final task = Task(
         name: name,
@@ -86,11 +84,12 @@ class _MyHomePageState extends State<MyHomePage> {
         dueDate: dueDate,
         reminderTime: reminderTime,
         description: description,
+        priority: priority,
       );
-      print('adding task');
+
       final insertedId = await widget.dbHelper.insertTask(task);
 
-      if (reminderTime != null || task.dueDate != null ) {
+      if (reminderTime != null || task.dueDate != null) {
         _scheduleNotification(task, insertedId);
       }
 
@@ -120,7 +119,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
   void _toggleCompletion(Task task) async {
     await widget.dbHelper.updateTask(Task(
       id: task.id,
@@ -129,6 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
       dueDate: task.dueDate,
       reminderTime: task.reminderTime,
       description: task.description,
+      priority: task.priority,
     ));
     _refreshTasks();
   }
@@ -149,7 +148,8 @@ class _MyHomePageState extends State<MyHomePage> {
       DateTime? dueDate = result['dueDate'];
       TimeOfDay? reminderTime = result['reminderTime'];
       String description = result['description'];
-      _addTask(taskName, dueDate, reminderTime, description);
+      String priority = result['priority'];
+      _addTask(taskName, dueDate, reminderTime, description, priority);
     }
   }
 
@@ -170,8 +170,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    List<Task> _filteredTasks = _selectedPriority == 'All'
+        ? _tasks.where((task) => task.completed == 0).toList()
+        : _tasks
+        .where((task) => task.completed == 0 && task.priority == _selectedPriority)
+        .toList();
+
     List<Task> _completedTasks = _tasks.where((task) => task.completed == 1).toList();
-    List<Task> _incompleteTasks = _tasks.where((task) => task.completed == 0).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -208,23 +213,41 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             SizedBox(height: 30.0),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'To Do',
-                style: TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'To Do',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ),
+                DropdownButton<String>(
+                  value: _selectedPriority,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedPriority = newValue!;
+                    });
+                    _refreshTasks();
+                  },
+                  items: <String>['All', 'Low', 'Medium', 'High']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
             SizedBox(height: 16.0),
             Expanded(
               child: ListView.builder(
-                itemCount: _incompleteTasks.length,
+                itemCount: _filteredTasks.length,
                 itemBuilder: (context, index) {
-                  final task = _incompleteTasks[index];
+                  final task = _filteredTasks[index];
                   final isOverdue = task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
                   return ListTile(
                     leading: Checkbox(
@@ -304,6 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
                           onPressed: () => _showDeleteDialog(context, task),
                         ),
+                        onTap: () => _navigateToEditDeleteTask(task),
                       );
                     },
                   ),
