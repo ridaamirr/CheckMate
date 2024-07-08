@@ -8,7 +8,7 @@ Create an app that allows users to manage their daily tasks.
 - **Task Viewing**: View all tasks in a categorized list.
 - **Task Editing**: Edit existing tasks.
 - **Task Deletion**: Delete tasks that are no longer needed.
-- **Task Categorization**: Categorize tasks into ToDo and Completed for better organization.
+- **Task Categorization**: Categorize according to their priority for better organization.
 - **Due Dates**: Set due dates for tasks to keep track of deadlines.
 - **Reminders**: Set reminders for tasks to receive notifications.
 
