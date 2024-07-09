@@ -10,11 +10,11 @@ class DatabaseHelper {
   Future<void> initializeDatabase() async {
     WidgetsFlutterBinding.ensureInitialized();
     final databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, 'task.db');
+    String path = join(databasesPath, 'todo.db');
 
     _database = await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: (Database db, int version) async {
         await db.execute(
           'CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, completed INTEGER, due_date INTEGER, reminder_time TEXT, priority TEXT)',
